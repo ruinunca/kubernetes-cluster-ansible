@@ -1,0 +1,38 @@
+---
+# file: kubernetes-master-playbook.yml
+# configures the orchestrator instance
+# This playbook has one play for installing software in the orchestrator
+
+# This play installs software in the orchestrator (master) server
+- hosts: master
+  become: true
+  tasks:
+  # Initialize the Kubernetes cluster with kubeadm
+  - name: Initialize the Kubernetes cluster using kubeadm
+    command: kubeadm init --apiserver-advertise-address="192.168.50.10" --apiserver-cert-extra-sans="192.168.50.10"  --node-name k8s-master --pod-network-cidr=192.168.0.0/16
+
+  # Setup the kube config file for the vagrant user to access the Kubernetes cluster
+  - name: Setup kubeconfig for vagrant user
+    command: "{{ item }}"
+    with_items:
+     - mkdir -p /home/vagrant/.kube
+     - cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+     - chown vagrant:vagrant /home/vagrant/.kube/config
+
+  # Setup the container networking provider and the network policy engine
+  - name: Install calico pod network
+    become: false
+    command: kubectl create -f https://docs.projectcalico.org/v3.4/getting-started/kubernetes/installation/hosted/calico.yaml
+
+  # Generate kube join command for joining the node to the Kubernetes cluster and store the command in the file named join-command
+  - name: Generate join command
+    command: kubeadm token create --print-join-command
+    register: join_command
+
+  - name: Copy join command to local file
+    local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+
+  # Setup a handler for checking Docker daemon
+  handlers:
+    - name: docker status
+      service: name=docker state=started

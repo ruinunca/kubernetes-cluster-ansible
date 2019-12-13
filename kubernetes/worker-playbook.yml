@@ -1,0 +1,20 @@
+---
+# file: kubernetes-worker-playbook.yml
+# configures the worker instances
+# This playbook has one play for installing software in the worker nodes
+
+# This play installs software in the worker nodes
+- hosts: worker
+  become: true
+  tasks:
+  # Join the nodes to the Kubernetes cluster
+  - name: Copy the join command to server location
+    copy: src=join-command dest=/tmp/join-command.sh mode=0777
+
+  - name: Join the node to cluster
+    command: sh /tmp/join-command.sh
+
+  # Setup a handler for checking Docker daemon
+  handlers:
+    - name: docker status
+      service: name=docker state=started
