@@ -25,6 +25,6 @@
     # Install the SSH key on servers
     - name: install ssh key
       authorized_key:
-        user: ubuntu
+        user: vagrant
         key: "{{ lookup('file', '/home/vagrant/.ssh/id_rsa.pub') }}"
         state: present
