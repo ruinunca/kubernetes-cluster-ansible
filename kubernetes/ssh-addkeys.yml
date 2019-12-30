@@ -1,13 +1,30 @@
 ---
-- hosts: all
-  become: yes
+# Set-up critical configurations
+- hosts: targets
+  # as the systems are not yet "known" by Ansible Facts cannot be gathered yet
   gather_facts: no
   remote_user: vagrant
+  become: yes
+  become_method: sudo
 
-  tasks:
-
-  - name: install ssh key
-    authorized_key: 
-      user: vagrant 
-      key: "{{ lookup('file', '/home/vagrant/.ssh/id_rsa.pub') }}" 
-      state: present
+  pre_tasks:
+    # To operate remotely in critical files without direct user input
+    - name: Remove require tty - alt
+      lineinfile:
+        regexp: "requiretty"
+        dest: /etc/sudoers.d/os_defaults
+        state: absent
+    # Giving permissions in sudoers for system critical files (see https://docs.ansible.com/ansible/latest/modules/lineinfile_module.html)
+    - name: Validate the sudoers file before saving  not to require password
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%ADMIN ALL='
+        line: '%ADMIN ALL=(ALL) NOPASSWD: ALL'
+        validate: /usr/sbin/visudo -cf %s
+    # Install the SSH key on servers
+    - name: install ssh key
+      authorized_key:
+        user: ubuntu
+        key: "{{ lookup('file', '/home/vagrant/.ssh/id_rsa.pub') }}"
+        state: present

@@ -59,6 +59,8 @@ Vagrant.configure("2") do |config|
           vb.customize opts
           vb.memory = NODE_VM_MEMORY
         end
+
+        master.vm.provision "shell", path: "bootstrap-targets.sh"
     end # orchestrator
 
     # Create worker nodes
@@ -76,6 +78,8 @@ Vagrant.configure("2") do |config|
               vb.customize opts
               vb.memory = NODE_VM_MEMORY
             end
+
+            node.vm.provision "shell", path: "bootstrap-targets.sh"
         end # i
     end # workers
 end
