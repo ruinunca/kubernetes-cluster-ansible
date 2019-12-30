@@ -9,7 +9,7 @@
   tasks:
   - name: Install packages that allow apt to be used over HTTPS
     apt:
-      name: "{{ packages }}"
+      pkg: "{{ packages }}"
       state: present
       update_cache: yes
     vars:
@@ -33,7 +33,7 @@
   # Install Docker and its dependent components
   - name: Install docker and its dependecies
     apt: 
-      name: "{{ packages }}"
+      pkg: "{{ packages }}"
       state: present
       update_cache: yes
     vars:
@@ -41,8 +41,9 @@
       - docker-ce 
       - docker-ce-cli 
       - containerd.io
-    notify:
-      - docker status
+  
+  - name: Start docker
+    service: name=docker state=started
 
   - name: Add vagrant user to docker group
     user:
@@ -67,6 +68,12 @@
   - name: Add an apt signing key for Kubernetes
     apt_key:
       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
+  
+  - name: Add Google apt signing key
+    apt_key:
+      url: hkp://keyserver.ubuntu.com:80
+      id: 6A030B21BA07F4FB
       state: present
 
   - name: Adding apt repository for Kubernetes
