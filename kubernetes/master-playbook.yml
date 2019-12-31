@@ -26,13 +26,7 @@
     command: kubectl create -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
     ignore_errors: true
 
-  # Generate kube join command for joining the node to the Kubernetes cluster and store the command in the file named join-command
-  - name: Generate join command
-    command: kubeadm token create --print-join-command
-    register: join_command
-
-  - name: Copy join command to local file
-    local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+  
 
   # Setup a handler for checking Docker daemon
   handlers:

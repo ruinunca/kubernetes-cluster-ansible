@@ -3,6 +3,17 @@
 # configures the worker instances
 # This playbook has one play for installing software in the worker nodes
 
+- hosts: master
+  become: true
+  tasks:
+  # Generate kube join command for joining the node to the Kubernetes cluster and store the command in the file named join-command
+  - name: Generate join command
+    command: kubeadm token create --print-join-command
+    register: join_command
+
+  - name: Copy join command to local file
+    local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+
 # This play installs software in the worker nodes
 - hosts: worker
   become: true
