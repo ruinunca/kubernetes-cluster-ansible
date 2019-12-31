@@ -7,10 +7,10 @@ IMAGE_NAME = "ubuntu/xenial64"
 NUM_WORKERS = 2
 # VirtualBox settings
 # Increase vmmemory if you want more than 256/512mb memory in the vm's
-NODE_VM_MEMORY = 256 
+NODE_VM_MEMORY = 1024 
 MGMT_VM_MEMORY = 512 
 # Increase numcpu if you want more cpu's per vm
-NUM_CPU = 1
+NUM_CPU = 2
 
 # Create the VMs
 Vagrant.configure("2") do |config|

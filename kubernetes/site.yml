@@ -12,6 +12,7 @@
       pkg: "{{ packages }}"
       state: present
       update_cache: yes
+      cache_valid_time: 3600
     vars:
       packages:
       - apt-transport-https
@@ -29,6 +30,29 @@
     apt_repository:
       repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
       state: present
+      update_cache: no
+
+  # Installing kubelet, kubeadm and kubectl
+  - name: Add an apt signing key for Kubernetes
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
+  
+  - name: Add Google apt signing key
+    apt_key:
+      url: hkp://keyserver.ubuntu.com:80
+      id: 6A030B21BA07F4FB
+      state: present
+
+  - name: Adding apt repository for Kubernetes
+    apt_repository:
+      repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+      filename: kubernetes.list
+      update_cache: no
+
+  - name: retry if needed using command apt-get update
+    command: apt-get update
 
   # Install Docker and its dependent components
   - name: Install docker and its dependecies
@@ -36,6 +60,7 @@
       pkg: "{{ packages }}"
       state: present
       update_cache: yes
+      cache_valid_time: 3600
     vars:
       packages:
       - docker-ce 
@@ -64,39 +89,23 @@
     command: swapoff -a
     when: ansible_swaptotal_mb > 0
 
-  # Installing kubelet, kubeadm and kubectl
-  - name: Add an apt signing key for Kubernetes
-    apt_key:
-      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-      state: present
-  
-  - name: Add Google apt signing key
-    apt_key:
-      url: hkp://keyserver.ubuntu.com:80
-      id: 6A030B21BA07F4FB
-      state: present
-
-  - name: Adding apt repository for Kubernetes
-    apt_repository:
-      repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
-      state: present
-      filename: kubernetes.list
-
   - name: Install Kubernetes binaries
     apt: 
       name: "{{ packages }}"
       state: present
       update_cache: yes
+      cache_valid_time: 3600
     vars:
       packages:
         - kubelet 
         - kubeadm 
         - kubectl
-
+    ignore_errors: yes
+    
   - name: Configure node ip
     lineinfile:
       path: /etc/default/kubelet
-      line: KUBELET_EXTRA_ARGS=--node-ip={{ node_ip }}
+      line: KUBELET_EXTRA_ARGS=--node-ip={{ ansible_host }}
       create: yes
 
   - name: Restart kubelet
@@ -104,10 +113,3 @@
       name: kubelet
       daemon_reload: yes
       state: restarted
-
-  # Deploy master and worker playbooks
-- name: Include a play after another play
-  import_playbook: master-playbook.yml
-
-- name: Include a play after another play
-  import_playbook: worker-playbook.yml

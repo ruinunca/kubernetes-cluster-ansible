@@ -9,7 +9,8 @@
   tasks:
   # Initialize the Kubernetes cluster with kubeadm
   - name: Initialize the Kubernetes cluster using kubeadm
-    command: kubeadm init --apiserver-advertise-address="192.168.50.10" --apiserver-cert-extra-sans="192.168.50.10"  --node-name k8s-master --pod-network-cidr=192.168.0.0/16
+    command: kubeadm init --apiserver-advertise-address="192.168.56.11" --apiserver-cert-extra-sans="192.168.56.11"  --node-name orchestrator --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=true
+    ignore_errors: true
 
   # Setup the kube config file for the vagrant user to access the Kubernetes cluster
   - name: Setup kubeconfig for vagrant user
@@ -22,7 +23,8 @@
   # Setup the container networking provider and the network policy engine
   - name: Install calico pod network
     become: false
-    command: kubectl create -f https://docs.projectcalico.org/v3.4/getting-started/kubernetes/installation/hosted/calico.yaml
+    command: kubectl create -f https://docs.projectcalico.org/v3.11/manifests/calico.yaml
+    ignore_errors: true
 
   # Generate kube join command for joining the node to the Kubernetes cluster and store the command in the file named join-command
   - name: Generate join command
